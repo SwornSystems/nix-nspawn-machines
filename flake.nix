@@ -48,6 +48,10 @@
         default = _final: _prev: { };
       };
 
+      nixosModules = {
+        default = ./module.nix;
+      };
+
       devShells = perSystemPkgs (pkgs: {
         # nix develop
         default = pkgs.mkShell {
