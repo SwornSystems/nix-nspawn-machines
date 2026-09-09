@@ -1,0 +1,117 @@
+{
+  "remove_trailing_whitespace_on_save": true,
+  "ensure_final_newline_on_save": true,
+
+  "file_scan_exclusions": ["**/.direnv", "**/.git"],
+
+  "languages": {
+    "Nix": {
+      "language_servers": ["nixd", "nil"],
+      "format_on_save": "on",
+      "formatter": "language_server"
+    },
+
+    "Markdown": {
+      "language_servers": ["vale", "typos"],
+      "soft_wrap": "none"
+    },
+
+    "TOML": {
+      "language_servers": ["tombi"],
+      "format_on_save": "off"
+    },
+
+    "YAML": {
+      "language_servers": ["yaml-language-server"],
+      "format_on_save": "off"
+    },
+
+    "JSON": {
+      "language_servers": ["json-language-server"],
+      "format_on_save": "off"
+    },
+
+    "JSONC": {
+      "language_servers": ["json-language-server"],
+      "format_on_save": "off"
+    },
+
+    "Nu": {
+      "language_servers": ["nu", "nu-lint"],
+      "format_on_save": "on",
+      "formatter": {
+        "external": {
+          "command": "nufmt",
+          "arguments": ["--stdin"]
+        }
+      }
+    }
+  },
+
+  "lsp": {
+    "nixd": {
+      "binary": {
+        "path": "nixd"
+      },
+
+      "settings": {
+        "formatting": {
+          "command": ["nixfmt", "--width=120"]
+        }
+      }
+    },
+
+    "nil": {
+      "binary": {
+        "path": "nil"
+      }
+    },
+
+    "typos": {
+      "binary": {
+        "path": "typos-lsp"
+      }
+    },
+
+    "vale": {
+      "binary": {
+        "path": "vale-ls"
+      }
+    },
+
+    "tombi": {
+      "binary": {
+        "path": "tombi",
+        "arguments": ["lsp"]
+      }
+    },
+
+    "yaml-language-server": {
+      "binary": {
+        "path": "yaml-language-server",
+        "arguments": ["--stdio"]
+      }
+    },
+
+    "json-language-server": {
+      "binary": {
+        "path": "vscode-json-language-server",
+        "arguments": ["--stdio"]
+      }
+    },
+
+    "nu": {
+      "binary": {
+        "path": "nu",
+        "arguments": ["--lsp"]
+      }
+    },
+
+    "nu-lint": {
+      "binary": {
+        "path": "nu-lint",
+        "arguments": ["--lsp", "--config", ".nu-lint.toml"]
+      }
+    }
+  }
+}

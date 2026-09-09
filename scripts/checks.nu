@@ -1,0 +1,46 @@
+#!/usr/bin/env nix
+#!nix develop .#ci --command nu
+
+# Run all linters and formatters.
+def main []: nothing -> nothing {
+    let markdown: list<string> = files "*.md"
+    let scripts: list<string> = files "*.nu"
+    let nix: list<string> = files "*.nix"
+
+    # Git
+    let head = if $env.GITHUB_EVENT_NAME? == pull_request { "HEAD^2" } else { "HEAD" }
+    committed $"origin/main..($head)"
+
+    # GitHub
+    zizmor --pedantic .github
+
+    # Spellchecking
+    typos
+
+    # Markdown
+    lychee --verbose .
+
+    let alerts = vale --no-exit --output=JSON ...$markdown | from json
+    if ($alerts | is-not-empty) {
+        vale ...$markdown
+        exit 1
+    }
+
+    # TOML
+    tombi lint --error-on-warnings
+
+    # Nushell
+    nufmt --dry-run ...$scripts
+    nu-lint --config .nu-lint.toml ...$scripts
+
+    # Nix
+    # NOTE: This doesn't make use of evaluation cache.
+    # https://github.com/NixOS/nix/issues/4279
+    nix flake check
+    nixfmt --check --width=120 ...$nix
+    deadnix --fail .
+}
+
+def files [pattern: string]: nothing -> list<string> {
+    git ls-files --cached --others --exclude-standard $pattern | lines
+}
