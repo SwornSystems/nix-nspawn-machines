@@ -12,15 +12,21 @@ let
   format = pkgs.formats.ini { listsAsDuplicateKeys = true; };
   settings = format.generate "${name}.nspawn" cfg.settings;
 
-  # nspawn refuses to boot without a real directory tree.
-  directory = pkgs.runCommand "nspawn-${name}" { } ''
-    mkdir -p $out/root/usr/lib $out/root/sbin
+  system = "/nix/var/nix/profiles/system";
+
+  # nspawn requires a minimal directory tree to boot.
+  # NOTE: Stored as a tarball to workaround initial image issues below.
+  tree = pkgs.runCommand "nspawn-${name}.tar" { } ''
+    mkdir -p tree/usr/lib tree/sbin
 
     # Needs to be copied directly, since it must exist prior to activation.
-    cp ${config.environment.etc."os-release".source} $out/root/usr/lib/os-release
+    cp ${config.environment.etc."os-release".source} tree/usr/lib/os-release
 
-    ln -s ${config.system.build.toplevel}/init $out/root/sbin/init
-    cp ${settings} $out/${name}.nspawn
+    ln -s ${system}/init tree/sbin/init
+
+    # https://github.com/NixOS/nixpkgs/blob/d6524aaca2ff07876657ae2b323f24be4874944b/nixos/lib/make-system-tarball.sh#L44
+    cd tree
+    tar --sort=name --mtime='@1' --owner=0 --group=0 --numeric-owner -c . > $out
   '';
 
   runner = pkgs.writeShellApplication {
@@ -45,18 +51,27 @@ let
         state="/var/lib/machines"
       fi
 
-      # Sync latest image.
-      mkdir -p "$state/${name}/usr/lib" "$state/${name}/sbin"
-      ln -sfn ${directory}/${name}.nspawn "$state/${name}.nspawn"
-      cp --no-preserve=mode ${directory}/root/usr/lib/os-release "$state/${name}/usr/lib/os-release"
-      ln -sfn ${directory}/root/sbin/init "$state/${name}/sbin/init"
+      ln -sfn ${settings} "$state/${name}.nspawn"
+
+      # Manually setup initial image.
+      # TODO: https://github.com/systemd/systemd/pull/35685#issuecomment-2557420827
+      if [ "$EUID" -ne 0 ]; then
+        scope=--user
+      else
+        scope=--system
+      fi
+
+      if [ ! -e "$state/${name}" ]; then
+        import="$(systemd-path systemd-util)/systemd-import"
+        "$import" "$scope" --image-root="$state" tar ${tree} ${name}
+      fi
 
       # Ensure machine doesn't get GC'd while alive.
       nix-store \
         --add-root "$state/.${name}.gcroot" \
         --indirect \
         --realise \
-        ${directory} > /dev/null
+        ${settings} > /dev/null
 
       exec systemd-nspawn \
         --directory="$state/${name}" \
@@ -149,5 +164,13 @@ in
   config = {
     boot.isContainer = lib.mkDefault true;
     system.build.nspawnRunner = runner;
+
+    virtualisation.systemd-nspawn.settings = {
+      Exec.Boot = lib.mkDefault true;
+      Files.BindReadOnly = [
+        "/nix/store"
+        "${config.system.build.toplevel}:${system}"
+      ];
+    };
   };
 }
