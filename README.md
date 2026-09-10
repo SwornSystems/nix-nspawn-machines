@@ -106,6 +106,11 @@ Ideally, over time these issues resolve upstream, and rootless becomes usable.
 2. `systemd` package needs `vmlinux.h` for rootless machines.
 3. `nsresourced`, `mountfsd`, and user `machined` units aren't installed.
 
+### `github`
+
+1. Runners lack `systemd-container` and `libnss-mymachines`, so machines aren't resolvable by default.
+2. Current `ubuntu-24.04` `systemd` is too old for `--mstack=`.
+
 ## License
 
 Licensed under the terms of both the [MIT License](LICENSE-MIT) and the [Apache License (Version 2.0)](LICENSE-APACHE).
