@@ -25,7 +25,7 @@ let
   '';
 
   runner = pkgs.writeShellApplication {
-    name = "run-${name}-nspawn";
+    name = "run-${config.networking.hostName}-nspawn";
 
     runtimeInputs = with pkgs; [
       coreutils
