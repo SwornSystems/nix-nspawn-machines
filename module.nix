@@ -38,6 +38,7 @@ let
         state="/var/lib/machines"
       fi
 
+      ln -sfn ${tree} "$state/${name}"
       ln -sfn ${settings} "$state/${name}.nspawn"
 
       # Ensure machine doesn't get GC'd while alive.
@@ -45,7 +46,7 @@ let
         --add-root "$state/.${name}.gcroot" \
         --indirect \
         --realise \
-        ${settings} > /dev/null
+        ${placeholder "out"} > /dev/null
 
       # Ideally we'd use `machinectl start` here instead.
       # But it runs from `/`, meaning any relative binds won't work.
@@ -65,7 +66,6 @@ let
         systemd-nspawn \
           --keep-unit \
           --directory="$state/${name}" \
-          --template=${tree} \
           --machine=${name} \
           --settings=trusted \
           "$@"
