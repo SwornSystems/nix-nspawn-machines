@@ -32,14 +32,13 @@ let
     ];
 
     text = ''
-      state="/var/lib/machines"
-
-      if [ ! -e "$state/${name}" ]; then
-        importctl --class=machine import-fs ${tree} ${name}
+      if [ -n "''${STATE_DIRECTORY:-}" ]; then
+        state="''${STATE_DIRECTORY%%:*}"
+      else
+        state="/var/lib/machines"
       fi
 
-      mkdir -p /run/systemd/nspawn
-      ln -sfn ${settings} "/run/systemd/nspawn/${name}.nspawn"
+      ln -sfn ${settings} "$state/${name}.nspawn"
 
       # Ensure machine doesn't get GC'd while alive.
       nix-store \
@@ -48,7 +47,28 @@ let
         --realise \
         ${settings} > /dev/null
 
-      exec machinectl start ${name}
+      # Ideally we'd use `machinectl start` here instead.
+      # But it runs from `/`, meaning any relative binds won't work.
+      # https://github.com/systemd/systemd/blob/v261.2/units/systemd-nspawn@.service.in
+      exec systemd-run \
+        --unit=machine-${name} \
+        --service-type=notify \
+        --property=KillMode=mixed \
+        --property=Delegate=yes \
+        --property=DelegateSubgroup=supervisor \
+        --property=SuccessExitStatus=133 \
+        --property=TasksMax=16384 \
+        --slice=machine.slice \
+        --same-dir \
+        --collect \
+        -- \
+        systemd-nspawn \
+          --keep-unit \
+          --directory="$state/${name}" \
+          --template=${tree} \
+          --machine=${name} \
+          --settings=trusted \
+          "$@"
     '';
   };
 in
