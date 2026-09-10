@@ -10,7 +10,6 @@
   # nix flake show
   outputs =
     {
-      self,
       nixpkgs,
       ...
     }:
@@ -25,7 +24,6 @@
           inherit system;
 
           overlays = [
-            self.overlays.default
             (final: _prev: {
               # Markdown
               vale-styles = final.symlinkJoin {
@@ -44,10 +42,6 @@
       perSystemPkgs = f: perSystem (system: f (systemPkgs.${system}));
     in
     {
-      overlays = {
-        default = _final: _prev: { };
-      };
-
       nixosModules = {
         default = ./module.nix;
       };
