@@ -86,6 +86,26 @@ Our approach aims to be as minimal as possible, just a thin wrapper around `syst
 
 Many.
 
+These are some I found trying to replace `Docker` and `QEMU` usages with `nspawn`.
+When running as root, most things work fine.
+Ideally, over time these issues resolve upstream, and rootless becomes usable.
+
+### `systemd`
+
+1. `rootidmap` mounts are unwritable when the user's UID and GID differ.
+2. `mountfsd` reuses the UID map as the GID map.
+3. `PrivateUsers=pick` defaults to `chown` ownership when set in a settings file, but `auto` on the CLI.
+4. Rootless `Bind=` mounts cannot read the user's own files.
+5. `Zone=` and `Bridge=` require root.
+6. `nss-mymachines` only resolves root machines, not rootless ones.
+7. `mountfsd` requires root to mount `/nix/store`, even though it's world-readable.
+
+### `nixpkgs`
+
+1. Firewall stops machines from getting a DHCP lease.
+2. `systemd` package needs `vmlinux.h` for rootless machines.
+3. `nsresourced`, `mountfsd`, and user `machined` units aren't installed.
+
 ## License
 
 Licensed under the terms of both the [MIT License](LICENSE-MIT) and the [Apache License (Version 2.0)](LICENSE-APACHE).
