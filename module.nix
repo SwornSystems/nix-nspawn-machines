@@ -29,6 +29,8 @@ let
 
     runtimeInputs = with pkgs; [
       coreutils
+      nix
+      systemd
     ];
 
     text = ''
