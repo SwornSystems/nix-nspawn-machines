@@ -25,7 +25,7 @@ let
   '';
 
   runner = pkgs.writeShellApplication {
-    name = "run-${config.networking.hostName}-nspawn";
+    name = "run-${config.networking.hostName}-nspawn-machine";
 
     runtimeInputs = with pkgs; [
       coreutils
@@ -54,7 +54,7 @@ let
       # But it runs from `/`, meaning any relative binds won't work.
       # https://github.com/systemd/systemd/blob/v261.2/units/systemd-nspawn@.service.in
       exec systemd-run \
-        --unit=machine-${name} \
+        --unit=nspawn-machine-${config.networking.hostName} \
         --service-type=notify \
         --property=KillMode=mixed \
         --property=Delegate=yes \
