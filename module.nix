@@ -6,7 +6,7 @@
 }:
 
 let
-  cfg = config.virtualisation.systemd-nspawn;
+  cfg = config.virtualisation.nspawn-machines;
   name = config.networking.fqdnOrHostName;
 
   format = pkgs.formats.ini { listsAsDuplicateKeys = true; };
@@ -38,7 +38,9 @@ let
         state="/var/lib/machines"
       fi
 
-      ln -sfn ${tree} "$state/${name}"
+      # Use mstack to layer writes over the read-only tree.
+      mkdir -p "$state/${name}.mstack/rw"
+      ln -sfn ${tree} "$state/${name}.mstack/layer@store"
       ln -sfn ${settings} "$state/${name}.nspawn"
 
       # Ensure machine doesn't get GC'd while alive.
@@ -65,7 +67,7 @@ let
         -- \
         systemd-nspawn \
           --keep-unit \
-          --directory="$state/${name}" \
+          --mstack="$state/${name}.mstack" \
           --machine=${name} \
           --settings=trusted \
           "$@"
@@ -73,7 +75,7 @@ let
   };
 in
 {
-  options.virtualisation.systemd-nspawn = {
+  options.virtualisation.nspawn-machines = {
     settings = lib.mkOption {
       type = format.type;
       default = { };
@@ -82,9 +84,9 @@ in
 
   config = {
     boot.isContainer = lib.mkDefault true;
-    system.build.nspawnRunner = runner;
+    system.build.nspawn-machine = runner;
 
-    virtualisation.systemd-nspawn.settings = {
+    virtualisation.nspawn-machines.settings = {
       Exec.Boot = lib.mkDefault true;
       Files.BindReadOnly = [
         "/nix/store"
