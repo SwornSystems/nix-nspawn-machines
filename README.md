@@ -74,6 +74,14 @@ Hello world!
 > sudo machinectl stop hello.example
 ```
 
+## Why
+
+Upstream nixpkgs already ships [`nspawn-container`](https://github.com/NixOS/nixpkgs/tree/master/nixos/modules/virtualisation/nspawn-container) support, though
+It's more focused on usage in NixOS integration tests rather than general use.
+
+It makes certain environmental assumptions that this approach does not.
+Our approach aims to be as minimal as possible, just a thin wrapper around `systemd.nspawn` files.
+
 ## Limitations
 
 Many.
