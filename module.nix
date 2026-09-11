@@ -126,10 +126,18 @@ in
         ];
       };
 
-      Files.BindReadOnly = [
-        "/nix/store"
-        "${config.system.build.toplevel}:${system}"
-      ];
+      Files = {
+        BindReadOnly = [
+          "/nix/store"
+          "${config.system.build.toplevel}:${system}"
+        ];
+
+        # NixOS makes `/var/empty` immutable.
+        # `machinectl remove` fails to clean up as a result.
+        TemporaryFileSystem = [
+          "/var/empty"
+        ];
+      };
     };
   };
 }
