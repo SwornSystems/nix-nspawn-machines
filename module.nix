@@ -49,7 +49,7 @@ let
       fi
 
       root="$state/${name}"
-      mkdir -p "$root/usr/lib" "$root/sbin"
+      mkdir -p "$root/usr/lib" "$root/sbin" "$root/run"
 
       # Needs to be installed directly, since it must exist prior to activation.
       install -m 644 ${config.environment.etc."os-release".source} "$root/usr/lib/os-release"
@@ -59,7 +59,7 @@ let
 
       # Ensure machine doesn't get GC'd while alive.
       nix-store \
-        --add-root "$state/.${name}.gcroot" \
+        --add-root "$root/run/.gcroot" \
         --indirect \
         --realise \
         ${placeholder "out"} > /dev/null
