@@ -7,7 +7,9 @@
 
 let
   cfg = config.virtualisation.nspawn-machines;
+
   name = config.networking.fqdnOrHostName;
+  hostName = config.networking.hostName;
 
   format = pkgs.formats.ini { listsAsDuplicateKeys = true; };
   settings = format.generate "${name}.nspawn" cfg.settings;
@@ -30,18 +32,8 @@ let
     ];
   });
 
-  # nspawn requires a minimal directory tree to boot.
-  tree = pkgs.runCommand "nspawn-${name}" { } ''
-    mkdir -p $out/usr/lib $out/sbin
-
-    # Needs to be copied directly, since it must exist prior to activation.
-    cp ${config.environment.etc."os-release".source} $out/usr/lib/os-release
-
-    ln -s ${system}/init $out/sbin/init
-  '';
-
   runner = pkgs.writeShellApplication {
-    name = "run-${config.networking.hostName}-nspawn-machine";
+    name = "run-${hostName}-nspawn-machine";
 
     runtimeInputs = with pkgs; [
       coreutils
@@ -56,9 +48,13 @@ let
         state="/var/lib/machines"
       fi
 
-      # Use mstack to layer writes over the read-only tree.
-      mkdir -p "$state/${name}.mstack/rw"
-      ln -sfn ${tree} "$state/${name}.mstack/layer@store"
+      root="$state/${name}"
+      mkdir -p "$root/usr/lib" "$root/sbin"
+
+      # Needs to be installed directly, since it must exist prior to activation.
+      install -m 644 ${config.environment.etc."os-release".source} "$root/usr/lib/os-release"
+
+      ln -sfn ${system}/init "$root/sbin/init"
       ln -sfn ${settings} "$state/${name}.nspawn"
 
       # Ensure machine doesn't get GC'd while alive.
@@ -72,7 +68,7 @@ let
       # But it runs from `/`, meaning any relative binds won't work.
       # https://github.com/systemd/systemd/blob/v261.2/units/systemd-nspawn@.service.in
       exec systemd-run \
-        --unit=nspawn-machine-${config.networking.hostName} \
+        --unit=nspawn-machine-${hostName} \
         --service-type=notify \
         --property=KillMode=mixed \
         --property=Delegate=yes \
@@ -85,7 +81,7 @@ let
         -- \
         systemd-nspawn \
           --keep-unit \
-          --mstack="$state/${name}.mstack" \
+          --directory="$root" \
           --machine=${name} \
           --settings=trusted \
           "$@"
@@ -106,7 +102,7 @@ in
   };
 
   config = {
-    boot.isContainer = lib.mkDefault true;
+    boot.isNspawnContainer = lib.mkDefault true;
     system.build.nspawn-machine = runner;
 
     virtualisation.nspawn-machines.settings = {

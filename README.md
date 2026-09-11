@@ -109,7 +109,6 @@ Ideally, over time these issues resolve upstream, and rootless becomes usable.
 ### `github`
 
 1. Runners need `systemd-container`, `libnss-mymachines`, and `nscd` to resolve machines.
-2. Current `ubuntu-24.04` `systemd` is too old for `--mstack=`.
 
 ## License
 
