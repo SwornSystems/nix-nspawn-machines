@@ -104,7 +104,26 @@ in
     system.build.nspawn-machine = runner;
 
     virtualisation.nspawn-machines.settings = {
-      Exec.Boot = lib.mkDefault true;
+      Exec = {
+        Boot = lib.mkDefault true;
+        NotifyReady = lib.mkDefault true;
+        LinkJournal = lib.mkDefault "try-host";
+
+        # Upstream warns this will be restricted in the future.
+        # So might as well restrict by default now.
+        # https://github.com/systemd/systemd/blob/v261.2/src/nspawn/nspawn.c#L6182-L6185
+        RestrictAddressFamilies = lib.mkDefault [
+          "AF_INET"
+          "AF_INET6"
+          "AF_UNIX"
+
+          # For `networkd`
+          # https://github.com/systemd/systemd/blob/v261.2/units/systemd-networkd.service.in#L43
+          "AF_NETLINK"
+          "AF_PACKET"
+        ];
+      };
+
       Files.BindReadOnly = [
         "/nix/store"
         "${config.system.build.toplevel}:${system}"
