@@ -14,6 +14,16 @@ let
 
   system = "/nix/var/nix/profiles/system";
 
+  systemd = pkgs.systemd.overrideAttrs (old: {
+    patches = old.patches ++ [
+      # https://github.com/systemd/systemd/pull/43731
+      (pkgs.fetchpatch {
+        url = "https://github.com/CathalMullan/systemd/commit/5e30c1d8852fb7c34da542231ab0cc642813e1bb.patch";
+        hash = "sha256-YohuDWnJT3D1HDTS1HDvW/qy805sp+10HYs9vXtsejc=";
+      })
+    ];
+  });
+
   # nspawn requires a minimal directory tree to boot.
   tree = pkgs.runCommand "nspawn-${name}" { } ''
     mkdir -p $out/usr/lib $out/sbin
@@ -30,7 +40,7 @@ let
     runtimeInputs = with pkgs; [
       coreutils
       nix
-      systemd
+      cfg.package
     ];
 
     text = ''
@@ -78,6 +88,11 @@ let
 in
 {
   options.virtualisation.nspawn-machines = {
+    package = lib.mkOption {
+      type = lib.types.package;
+      default = systemd;
+    };
+
     settings = lib.mkOption {
       type = format.type;
       default = { };
