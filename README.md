@@ -94,7 +94,7 @@ Ideally, over time these issues resolve upstream, and rootless becomes usable.
 
 1. [`rootidmap` mounts are unwritable when the user's UID and GID differ](https://github.com/systemd/systemd/pull/43731).
 2. `mountfsd` reuses the UID map as the GID map.
-3. `PrivateUsers=pick` defaults to `chown` ownership when set in a settings file, but `auto` on the CLI.
+3. [`PrivateUsers=pick` defaults to `chown` ownership when set in a settings file, but `auto` on the CLI](https://github.com/systemd/systemd/pull/43739).
 4. Rootless `Bind=` mounts cannot read the user's own files.
 5. `Zone=` and `Bridge=` require root.
 6. `nss-mymachines` only resolves root machines, not rootless ones.

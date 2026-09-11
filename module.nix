@@ -18,8 +18,14 @@ let
     patches = old.patches ++ [
       # https://github.com/systemd/systemd/pull/43731
       (pkgs.fetchpatch {
-        url = "https://github.com/CathalMullan/systemd/commit/5e30c1d8852fb7c34da542231ab0cc642813e1bb.patch";
-        hash = "sha256-YohuDWnJT3D1HDTS1HDvW/qy805sp+10HYs9vXtsejc=";
+        url = "https://github.com/CathalMullan/systemd/commit/c044423910af1d95b242a697acd6b3eeb6f903f7.patch";
+        hash = "sha256-xtSoirHMczkOfkE+dck2wX6M1RvZ71CgeYUC0PSGrkg=";
+      })
+
+      # https://github.com/systemd/systemd/pull/43739
+      (pkgs.fetchpatch {
+        url = "https://github.com/CathalMullan/systemd/commit/886dd44dabd6ad93999ec2943e7c3439132da581.patch";
+        hash = "sha256-MTeHvlj8YWWfAbOpDDv7uayjFty7fC8oB6yqP97VyhM=";
       })
     ];
   });
