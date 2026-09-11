@@ -76,7 +76,7 @@ Hello world!
 
 ## Why
 
-Upstream nixpkgs already ships [`nspawn-container`](https://github.com/NixOS/nixpkgs/tree/master/nixos/modules/virtualisation/nspawn-container) support, though
+Upstream nixpkgs already ships [`nspawn-container`](https://github.com/NixOS/nixpkgs/tree/master/nixos/modules/virtualisation/nspawn-container) support.
 It's more focused on usage in NixOS integration tests rather than general use.
 
 It makes certain environmental assumptions that this approach does not.
@@ -92,19 +92,19 @@ Ideally, over time these issues resolve upstream, and rootless becomes usable.
 
 ### `systemd`
 
-1. [`rootidmap` mounts are unwritable when the user's UID and GID differ](https://github.com/systemd/systemd/pull/43731).
+1. *PATCHED* [`rootidmap` mounts are unwritable when the user's UID and GID differ](https://github.com/systemd/systemd/pull/43731).
 2. `mountfsd` reuses the UID map as the GID map.
-3. [`PrivateUsers=pick` defaults to `chown` ownership when set in a settings file, but `auto` on the CLI](https://github.com/systemd/systemd/pull/43739).
-4. Rootless `Bind=` mounts cannot read the user's own files.
+3. *PATCHED* [`PrivateUsers=pick` defaults to `chown` ownership when set in a settings file, but `auto` on the CLI](https://github.com/systemd/systemd/pull/43739).
+4. [Rootless `Bind=` mounts cannot read the user's own files](https://github.com/systemd/systemd/issues/36470).
 5. `Zone=` and `Bridge=` require root.
 6. `nss-mymachines` only resolves root machines, not rootless ones.
 7. `mountfsd` requires root to mount `/nix/store`, even though it's world-readable.
 
 ### `nixpkgs`
 
-1. Firewall stops machines from getting a DHCP lease.
-2. `systemd` package needs `vmlinux.h` for rootless machines.
-3. `nsresourced`, `mountfsd`, and user `machined` units aren't installed.
+1. [Firewall stops machines from getting a DHCP lease](https://github.com/NixOS/nixpkgs/pull/498177).
+2. [`systemd` package needs `vmlinux.h` for rootless machines](https://github.com/NixOS/nixpkgs/pull/404864).
+3. `nsresourced`, `mountfsd`, and user `machined` units aren't installed
 
 ### `github`
 
